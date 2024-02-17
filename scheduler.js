@@ -163,10 +163,11 @@ async function process_input(){
             successfully_added = add_appointment(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code); 
             if (successfully_added){
                 console.log("\nYour appointment has been scheduled. Navigate to 'calendar.txt' to see the appointment."); 
+                run_scheduler(); 
             } else {
                 console.log("\nYour appointment has not been scheduled. "); 
+                run_scheduler(); 
             }
-
 
 
         }
@@ -311,7 +312,7 @@ async function load_booked_dates() {
             });
 
             booked_times = records.map(event => {
-                const match = event.match(/DTSTAMP:(\d{4}-\d{2}-\d{2})/);
+                const match = event.match(/DTSTART:(\d{4}-\d{2}-\d{2})/);
                 return match ? match[1] : null;
             });
 
@@ -353,24 +354,22 @@ async function add_appointment(attendee, dtstart, dtstamp, method, stat, uid){
     const dtstamp_date = dtstamp.toISOString().split('T')[0];
     const dtstart_date = dtstart.toISOString().split('T')[0];
 
-    let new_appointment = `
-BEGIN:VEVENT
+    let new_appointment = `\nBEGIN:VEVENT
 ATTENDEE:${attendee.toUpperCase()}
 DTSTART:${dtstart_date}
 DTSTAMP:${dtstamp_date}
 METHOD:${method.toUpperCase()}
 STATUS:${stat.toUpperCase()}
 UID:${uid}
-END:VEVENT
-`;
+END:VEVENT`;
 
     try {
         let fileContent = await fs.promises.readFile('calendar.txt', 'utf-8');
 
-        const lineIndex = 2;
+        const lineIndex = fileContent.indexOf("VERSION:1.0");        
 
         if (lineIndex !== -1) {
-            fileContent = fileContent.slice(0, lineIndex + "BEGIN:VCALENDAR".length) + new_appointment + fileContent.slice(lineIndex + "BEGIN:VCALENDAR".length);
+            fileContent = fileContent.slice(0, lineIndex + "VERSION:1.0".length) + new_appointment + fileContent.slice(lineIndex + "VERSION:1.0".length);
             await fs.promises.writeFile("calendar.txt", fileContent);
         }
 
@@ -383,6 +382,44 @@ END:VEVENT
 
 
 }
+
+
+function find_appointment(uid){
+
+}
+
+function cancel_appointment(uid){
+
+}
+ 
+
+
+async function run_scheduler(){
+    const response =  await ask_question("\nPlease choose your next step: \n    1 - QUIT\n    2 - SCHEDULE APPOINTMENT\n    3 - LOOKUP APPOINTMENT\n    4 - CANCEL APPOINTMENT\n\n");
+    if (parseInt(response) == 1){
+        console.log("\nProgram terminated."); 
+        process.exit(); 
+    } else if (parseInt(response) == 2){
+        console.log("\nYou have chosen to schedule an appointment."); 
+        process_input(); 
+    } else if (parseInt(response) == 3){
+        console.log("\nYou have chosen to lookup an appointment."); 
+        const uid = await ask_question("\nPlease enter the appointment confirmation code or UID:"); 
+        
+        find_appointment(uid); 
+    } else if (parseInt(response) == 4){
+        console.log("\nYou have chosen to cancel an appointment."); 
+        const uid = await ask_question("\nPlease enter the appointment confirmation code or UID:"); 
+
+        cancel_appointment(uid); 
+
+    } else {
+        console.log("\nPlease enter a valid selection."); 
+        run_scheduler(); 
+    }
+
+}
+
+run_scheduler(); 
+
   
-  
-process_input(); 
