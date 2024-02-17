@@ -354,7 +354,7 @@ async function add_appointment(attendee, dtstart, dtstamp, method, stat, uid){
     const dtstamp_date = dtstamp.toISOString().split('T')[0];
     const dtstart_date = dtstart.toISOString().split('T')[0];
 
-    let new_appointment = `\nBEGIN:VEVENT
+    let new_appointment = `BEGIN:VEVENT
 ATTENDEE:${attendee.toUpperCase()}
 DTSTART:${dtstart_date}
 DTSTAMP:${dtstamp_date}
@@ -369,7 +369,7 @@ END:VEVENT`;
         const lineIndex = fileContent.indexOf("VERSION:1.0");        
 
         if (lineIndex !== -1) {
-            fileContent = fileContent.slice(0, lineIndex + "VERSION:1.0".length) + new_appointment + fileContent.slice(lineIndex + "VERSION:1.0".length);
+            fileContent = fileContent.slice(0, lineIndex + "VERSION:1.0".length) + "\n" + new_appointment + fileContent.slice(lineIndex + "VERSION:1.0".length);
             await fs.promises.writeFile("calendar.txt", fileContent);
         }
 
