@@ -1,0 +1,14 @@
+{
+  "name": "software-engineering-assignment-4",
+  "version": "1.0.0",
+  "description": "Software Engineering Assignment 4, Due 2/19/2024",
+  "main": "scheduler.js",
+  "scripts": {
+    "test": "jasmine"
+  },
+  "author": "Deshna Doshi",
+  "license": "ISC",
+  "devDependencies": {
+    "jasmine": "^5.1.0"
+  }
+}
