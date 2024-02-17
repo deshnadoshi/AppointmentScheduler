@@ -517,7 +517,7 @@ function cancel_appointment(uid){
 
         // records stores all of the records now 
         split_records_array = []; 
-        for (let i = 0; i < records. length; i++){
+        for (let i = 0; i < records.length; i++){
             split_records_array.push(split_record(records[i])); 
         }
 
@@ -525,9 +525,32 @@ function cancel_appointment(uid){
         const lookup_record = find_record(split_records_array, uid); 
         if (lookup_record != undefined){
             console.log("The record below will be cancelled."); 
-            console.log(lookup_record);
+            const merged_record = lookup_record.slice(0, -1).join('\n') + "\n" + lookup_record[lookup_record.length - 1];
+            console.log("\n"); 
+            console.log(merged_record);
 
+
+
+            try {
+                let fileContent = fs.promises.readFile('calendar.txt', 'utf-8');
             
+                if (typeof fileContent !== 'string') {
+                    fileContent = fileContent.toString();
+                }
+            
+                fileContent = fileContent.replace(new RegExp(merged_record, 'g'), '');
+            
+                fs.promises.writeFile("calendar.txt", fileContent, 'utf-8');
+            
+                return true; 
+            } catch (err) {
+                console.error('Error writing file:', err);
+                return false; 
+            }
+            
+        
+
+
         } else {
             console.log("No such record exists."); 
         }
