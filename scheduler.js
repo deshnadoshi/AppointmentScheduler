@@ -288,10 +288,6 @@ async function load_booked_dates() {
                     end_vevent = true;
                 }
 
-                if (begin_vevent == true && end_vevent == false && (begin_calendar == false || end_calendar == true)) {
-                    // Skip extraneous entries
-                }
-
                 if (end_vevent == false) {
                     if ((line.toLowerCase()).includes("begin:vevent")) {
                         begin_calendar = true;
@@ -383,12 +379,164 @@ END:VEVENT`;
 
 }
 
+function split_record(record){
+    let record_contents = []; 
+
+    record.split(/\r?\n/).forEach(line =>  {
+        record_contents.push(line); 
+    });
+
+    record_contents.pop(); // Gets rid of the extra new line at the end of each record
+
+    return record_contents; 
+}
 
 function find_appointment(uid){
 
+    fs.readFile("calendar.txt", 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading the file. Please re-run the program.');
+            reject(err);
+            return;
+        }
+
+        let file_data = data.toString();
+        let end_calendar = false;
+        let begin_calendar = false;
+        let begin_vevent = false;
+        let end_vevent = false;
+
+        let current_record = "";
+        let records = [];
+
+        file_data.split(/\r?\n/).forEach(line => {
+            if ((line.toLowerCase()).includes("begin:vcalendar")) {
+                begin_vevent = true;
+            }
+
+            if ((line.toLowerCase()).includes("end:vcalendar")) {
+                end_vevent = true;
+            }
+
+            if (end_vevent == false) {
+                if ((line.toLowerCase()).includes("begin:vevent")) {
+                    begin_calendar = true;
+                    end_calendar = false;
+                }
+
+                if ((begin_calendar == true) && (end_calendar == false)) {
+                    current_record += (line + "\n");
+                }
+
+                if ((line.toLowerCase()).includes("end:vevent")) {
+                    records.push(current_record);
+                    end_calendar = true;
+                    begin_calendar = false;
+                    current_record = "";
+                }
+            }
+        });
+
+        // records stores all of the records now 
+        split_records_array = []; 
+        for (let i = 0; i < records. length; i++){
+            split_records_array.push(split_record(records[i])); 
+        }
+
+        
+        const lookup_record = find_record(split_records_array, uid); 
+        if (lookup_record != undefined){
+            console.log("Below is the record you requested information about."); 
+            console.log(lookup_record);
+        } else {
+            console.log("No such record exists."); 
+        }
+        
+        
+        run_scheduler(); 
+
+    });
+
+
+
 }
 
+function find_record(records, uidToFind) {
+    return records.find(record => {
+      const uidMatch = record.find(line => line.startsWith('UID:'));
+      return uidMatch && uidMatch.split(':')[1] === uidToFind;
+    });
+  }
+  
+
 function cancel_appointment(uid){
+
+    fs.readFile("calendar.txt", 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading the file. Please re-run the program.');
+            reject(err);
+            return;
+        }
+
+        let file_data = data.toString();
+        let end_calendar = false;
+        let begin_calendar = false;
+        let begin_vevent = false;
+        let end_vevent = false;
+
+        let current_record = "";
+        let records = [];
+
+        file_data.split(/\r?\n/).forEach(line => {
+            if ((line.toLowerCase()).includes("begin:vcalendar")) {
+                begin_vevent = true;
+            }
+
+            if ((line.toLowerCase()).includes("end:vcalendar")) {
+                end_vevent = true;
+            }
+
+            if (end_vevent == false) {
+                if ((line.toLowerCase()).includes("begin:vevent")) {
+                    begin_calendar = true;
+                    end_calendar = false;
+                }
+
+                if ((begin_calendar == true) && (end_calendar == false)) {
+                    current_record += (line + "\n");
+                }
+
+                if ((line.toLowerCase()).includes("end:vevent")) {
+                    records.push(current_record);
+                    end_calendar = true;
+                    begin_calendar = false;
+                    current_record = "";
+                }
+            }
+        });
+
+        // records stores all of the records now 
+        split_records_array = []; 
+        for (let i = 0; i < records. length; i++){
+            split_records_array.push(split_record(records[i])); 
+        }
+
+        
+        const lookup_record = find_record(split_records_array, uid); 
+        if (lookup_record != undefined){
+            console.log("The record below will be cancelled."); 
+            console.log(lookup_record);
+
+            
+        } else {
+            console.log("No such record exists."); 
+        }
+        
+        
+        run_scheduler(); 
+
+    });
+
 
 }
  
