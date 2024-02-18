@@ -599,7 +599,6 @@ function cancel_appointment(uid){
                 records[index_to_replace] = updated_record; 
                 file_content = "BEGIN:VCALENDAR\nPRODID:object1\nVERSION:1.0\n" + records.join("") + "END:VCALENDAR";
                 resolve(true); 
-                return new Promise((resolve, reject) => {
 
                 fs.writeFile("calendar.txt", file_content, 'utf-8', (writeErr) => {
                     if (writeErr) {
@@ -614,11 +613,8 @@ function cancel_appointment(uid){
 
                     }
                 });
-            });
         
             }
-
-            resolve(true); 
 
         } else {
             console.log("No such record exists."); 

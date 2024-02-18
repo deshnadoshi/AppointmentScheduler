@@ -89,7 +89,7 @@ describe ('Appointment Scheduler', () => {
     // Test Case 10: Should return true during lookup if the uid exists. 
     it ('should return an appointment during lookup if the uid exists.', async () => {
         
-        const result = await find_appointment("oer328nj"); 
+        const result = await find_appointment("fhdr123"); 
         expect(result).toBe(true);
 
     }); 
@@ -104,11 +104,10 @@ describe ('Appointment Scheduler', () => {
     }); 
 
     // Test Case 12: Should return true during cancellation if the uid exists. 
-    it ('should return true during cancellation if the uid exists and should update the status to cancelled.', async () => {
+    it ('should return true during cancellation if the uid exists.', async () => {
         
-        const result = await cancel_appointment("einr25dh4"); 
+        const result = await cancel_appointment("reio620"); 
         expect(result).toBe(true);
-
 
     }); 
 })
