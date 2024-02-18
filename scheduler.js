@@ -534,41 +534,38 @@ async function cancel_appointment(uid){
 
         if (lookup_record != undefined){
             console.log("The record below will be cancelled."); 
-            let merged_record = lookup_record.join('\n');
-            merged_record = merged_record.trimEnd(); 
-            console.log(merged_record); 
-
-            try {
-                let fileContent = await fs.promises.readFile('calendar.txt', 'utf-8');
+            let merged_record = lookup_record.join('\n') + "\n";
             
-                fileContent = fileContent.toString(); 
-            
-                fileContent = fileContent.replace(merged_record, "");
+            let updated_record = merged_record.replace(/(STATUS:).*?(?=\n)/, '$1CANCELLED');
 
-                console.log("\n\n")
-            
-                await fs.promises.writeFile("calendar.txt", fileContent, 'utf-8');
-                console.log(fileContent); 
+            let file_content = data.toString();
+            const index_to_replace = records.findIndex(record => record.includes(`UID:${uid}`));
 
+            if (index_to_replace != -1){
+                records[index_to_replace] = updated_record; 
+                file_content = "BEGIN:VCALENDAR\nPRODID:object1\nVERSION:1.0\n" + records.join("") + "END:VCALENDAR";
+                
+                fs.writeFile("calendar.txt", file_content, 'utf-8', (writeErr) => {
+                    if (writeErr) {
+                        console.error('Error writing to the file:', writeErr);
+                        run_scheduler(); 
 
-                console.log(delete_string(fileContent, merged_record)); 
-                console.log("You appointment has been cancelled. The appointment was removed from the scheduler."); 
-                run_scheduler(); 
+                    } else {
+                        console.log('The appointment has been cancelled.');
+                        run_scheduler(); 
+                        return true; 
 
-                return true; 
-
-            } catch (err) {
-                console.error('Error writing file:', err);
-                run_scheduler(); 
-
-                return false; 
-
+                    }
+                });
+        
             }
-             
+
+            return true; 
 
         } else {
             console.log("No such record exists."); 
             run_scheduler(); 
+            return false; 
         }
         
     });
@@ -576,11 +573,6 @@ async function cancel_appointment(uid){
 
 }
 
-function delete_string(file_string, string_to_delete){
-
-    return file_string.includes(string_to_delete); 
-
-}
 
 
 async function run_scheduler(){
