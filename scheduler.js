@@ -18,7 +18,7 @@ function ask_question(question_string){
     
 }
 
-async function process_input(){
+async function process_input(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code){
 
     let start_format_correct = true; 
     let end_format_correct = true; 
@@ -84,7 +84,7 @@ async function process_input(){
 
 
             let valid_selection = true; 
-            let book_this_date = new Date(); 
+            book_this_date = new Date(); 
             do {
 
                 selected_date = await ask_question("Please enter the corresponding identifier of the date you would like to select (i.e. date1, date2, etc.): "); 
@@ -106,7 +106,7 @@ async function process_input(){
             let valid_attendee = true; 
             const email_regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
             const phone_regex = /^\d{3}-?\d{3}-?\d{4}$/;
-            let attendee_info = ""; 
+            attendee_info = ""; 
         
             do {
 
@@ -124,7 +124,7 @@ async function process_input(){
 
 
             let valid_method = true; 
-            let method_info = ""; 
+            method_info = ""; 
             do {
 
                 method = await ask_question("\nPlease enter the METHOD: "); 
@@ -140,7 +140,7 @@ async function process_input(){
 
 
             let valid_status = true; 
-            let status_info = ""; 
+            status_info = ""; 
             do {
 
                 status_val = await ask_question("\nPlease enter the STATUS: "); 
@@ -149,32 +149,37 @@ async function process_input(){
                     status_info = status_val; 
                 } else {
                     console.log("That is not a valid STATUS value. Please try again. You may enter TENTATIVE or CONFIRMED.");
-                    status_info = false; 
+                    valid_status = false; 
                 }
 
-            } while (status_info == false); 
+            } while (valid_status == false); 
 
-            const generated_dtstamp = new Date();
+            generated_dtstamp = new Date();
             generated_dtstamp.setHours(0, 0, 0, 0);
 
             console.log("\nThe DTSTAMP value is today's date:", generated_dtstamp); 
             
-            const confirmation_code = generated_confirmation_code(); 
+            confirmation_code = generated_confirmation_code(); 
             console.log("\nThe confirmation code is", confirmation_code); 
            
             let successfully_added = false; 
             check_selection = true; 
-            successfully_added = add_appointment(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code); 
+            try {
+                successfully_added = add_appointment(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code); 
+            } catch (error){
+                console.log("Error booking the appointment."); 
+            }
             
             if (successfully_added){
                 console.log("\nYour appointment has been scheduled. Navigate to 'calendar.txt' to see the appointment."); 
-                
                 run_scheduler(); 
-                is_added = true; 
+                return true; 
+
             } else {
                 console.log("\nYour appointment has not been scheduled. "); 
                 run_scheduler(); 
-                is_added = false; 
+                return false; 
+
             }
 
 
@@ -360,6 +365,7 @@ function generated_confirmation_code() {
 }
 
 
+
 async function add_appointment(attendee, dtstart, dtstamp, method, stat, uid){
 
 
@@ -371,7 +377,7 @@ ATTENDEE:${attendee.toUpperCase()}
 DTSTART:${dtstart_date}
 DTSTAMP:${dtstamp_date}
 METHOD:${method.toUpperCase()}
-STATUS:${stat.toUpperCase()}
+STATUS:${String(stat).toUpperCase()}
 UID:${uid}
 END:VEVENT`;
 
@@ -388,9 +394,9 @@ END:VEVENT`;
         return true; 
     } catch (err) {
         console.error('Error reading or writing file:', err);
+        return false; 
     }
 
-    console.log(check_selection); 
 
 
 
@@ -587,14 +593,14 @@ async function cancel_appointment(uid){
 
 
 
-async function run_scheduler(){
+async function run_scheduler(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code){
     const response =  await ask_question("\nPlease choose your next step: \n    1 - QUIT\n    2 - SCHEDULE APPOINTMENT\n    3 - LOOKUP APPOINTMENT\n    4 - CANCEL APPOINTMENT\n\n");
     if (parseInt(response) == 1){
         console.log("\nProgram terminated."); 
         process.exit(); 
     } else if (parseInt(response) == 2){
         console.log("\nYou have chosen to schedule an appointment."); 
-        process_input(); 
+        process_input(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code); 
     } else if (parseInt(response) == 3){
         console.log("\nYou have chosen to lookup an appointment."); 
         const uid = await ask_question("\nPlease enter the appointment confirmation code or UID:"); 
