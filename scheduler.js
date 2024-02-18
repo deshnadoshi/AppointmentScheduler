@@ -66,8 +66,8 @@ async function process_input(){
         dates_available = await find_N_dates(new Date(start_date), new Date(end_date)); 
 
         if (dates_available.length == 0){
-            console.log("ERROR: There are no available dates in the chosen date range. The program will be terminated."); 
-            process.exit(); 
+            console.log("ERROR: There are no available dates in the chosen date range."); 
+            run_scheduler();  
         } else {
             console.log("The available dates in the chosen date range are: "); 
             const selection_dates = {};
@@ -212,7 +212,7 @@ async function find_N_dates(start_date, end_date){
     // console.log(unavailable_dates);
 
 
-    while (current_date <= end_date && available_dates.length < 4){
+    while (current_date < end_date && available_dates.length < 4){
         current_date.setDate(current_date.getDate() + 1); // Move to the next day
 
         let check_overlap = compare_date_objects(current_date, unavailable_dates);
@@ -249,7 +249,7 @@ function is_bank_holiday(date_obj){
 }
 
 function is_weekend(date_obj){
-    const is_weekend = (date_obj.getDay() === 0 || date_obj.getDay() === 6); 
+    const is_weekend = (date_obj.getDay() === 5 || date_obj.getDay() === 6); 
     if (is_weekend){
         return true;  
     }
@@ -275,6 +275,7 @@ async function load_booked_dates() {
             let begin_calendar = false;
             let begin_vevent = false;
             let end_vevent = false;
+            let status_array = []; 
 
             let current_record = "";
             let records = [];
@@ -296,6 +297,9 @@ async function load_booked_dates() {
 
                     if ((begin_calendar == true) && (end_calendar == false)) {
                         current_record += (line + "\n");
+                        if (line.toLowerCase().includes("status")){
+                            status_array.push(line.split(":")[1]); 
+                        }
                     }
 
                     if ((line.toLowerCase()).includes("end:vevent")) {
@@ -307,11 +311,15 @@ async function load_booked_dates() {
                 }
             });
 
-            booked_times = records.map(event => {
-                const match = event.match(/DTSTART:(\d{4}-\d{2}-\d{2})/);
-                return match ? match[1] : null;
-            });
-
+            
+            for (let i = 0; i < records.length; i++) {
+                const match = records[i].match(/DTSTART:(\d{4}-\d{2}-\d{2})/);
+            
+                if (!status_array[i].toLowerCase().includes("cancelled")) {
+                    booked_times.push(match ? match[1] : null);
+                }
+            }
+            
             booked_dates = booked_times.map(dateString => new Date(dateString));
 
             resolve(booked_dates);
@@ -469,9 +477,9 @@ function find_record(records, uidToFind) {
   }
   
 
-function cancel_appointment(uid){
+async function cancel_appointment(uid){
 
-    fs.readFile("calendar.txt", 'utf8', (err, data) => {
+    fs.readFile("calendar.txt", 'utf8', async (err, data) => {
         if (err) {
             console.error('Error reading the file. Please re-run the program.');
             reject(err);
@@ -523,46 +531,56 @@ function cancel_appointment(uid){
 
         
         const lookup_record = find_record(split_records_array, uid); 
+
         if (lookup_record != undefined){
             console.log("The record below will be cancelled."); 
-            const merged_record = lookup_record.slice(0, -1).join('\n') + "\n" + lookup_record[lookup_record.length - 1];
-            console.log("\n"); 
-            console.log(merged_record);
-
-
+            let merged_record = lookup_record.join('\n');
+            merged_record = merged_record.trimEnd(); 
+            console.log(merged_record); 
 
             try {
-                let fileContent = fs.promises.readFile('calendar.txt', 'utf-8');
+                let fileContent = await fs.promises.readFile('calendar.txt', 'utf-8');
             
-                if (typeof fileContent !== 'string') {
-                    fileContent = fileContent.toString();
-                }
+                fileContent = fileContent.toString(); 
             
-                fileContent = fileContent.replace(new RegExp(merged_record, 'g'), '');
+                fileContent = fileContent.replace(merged_record, "");
+
+                console.log("\n\n")
             
-                fs.promises.writeFile("calendar.txt", fileContent, 'utf-8');
-            
+                await fs.promises.writeFile("calendar.txt", fileContent, 'utf-8');
+                console.log(fileContent); 
+
+
+                console.log(delete_string(fileContent, merged_record)); 
+                console.log("You appointment has been cancelled. The appointment was removed from the scheduler."); 
+                run_scheduler(); 
+
                 return true; 
+
             } catch (err) {
                 console.error('Error writing file:', err);
-                return false; 
-            }
-            
-        
+                run_scheduler(); 
 
+                return false; 
+
+            }
+             
 
         } else {
             console.log("No such record exists."); 
+            run_scheduler(); 
         }
         
-        
-        run_scheduler(); 
-
     });
 
 
 }
- 
+
+function delete_string(file_string, string_to_delete){
+
+    return file_string.includes(string_to_delete); 
+
+}
 
 
 async function run_scheduler(){
