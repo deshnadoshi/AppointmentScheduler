@@ -456,8 +456,10 @@ function find_appointment(uid){
         if (lookup_record != undefined){
             console.log("Below is the record you requested information about."); 
             console.log(lookup_record);
+            return true; 
         } else {
             console.log("No such record exists."); 
+            return false; 
         }
         
         
