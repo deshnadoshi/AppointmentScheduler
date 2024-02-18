@@ -2,7 +2,7 @@ const { time } = require('console');
 const fs = require('fs');
 const crypto = require('crypto');
 
-let is_added = false; 
+let check_selection = false; 
 
 const readline = require('node:readline').createInterface({
     input: process.stdin,
@@ -92,9 +92,11 @@ async function process_input(){
                     console.log("You selected", selection_dates[selected_date]); 
                     book_this_date = selection_dates[selected_date]; 
                     valid_selection = true; 
+                    check_selection = true; 
                 } else {
                     console.log("The value you entered does not exist, please try again."); 
                     valid_selection = false; 
+                    check_selection = false; 
                 }
 
             } while (valid_selection == false); 
@@ -161,6 +163,7 @@ async function process_input(){
             console.log("\nThe confirmation code is", confirmation_code); 
            
             let successfully_added = false; 
+            check_selection = true; 
             successfully_added = add_appointment(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code); 
             
             if (successfully_added){
@@ -382,11 +385,12 @@ END:VEVENT`;
             await fs.promises.writeFile("calendar.txt", fileContent);
         }
 
-        return is_added; 
+        return true; 
     } catch (err) {
         console.error('Error reading or writing file:', err);
-        return is_added; 
     }
+
+    console.log(check_selection); 
 
 
 
