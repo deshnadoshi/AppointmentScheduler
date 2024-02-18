@@ -2,6 +2,7 @@ const { time } = require('console');
 const fs = require('fs');
 const crypto = require('crypto');
 
+let is_added = false; 
 
 const readline = require('node:readline').createInterface({
     input: process.stdin,
@@ -161,12 +162,16 @@ async function process_input(){
            
             let successfully_added = false; 
             successfully_added = add_appointment(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code); 
+            
             if (successfully_added){
                 console.log("\nYour appointment has been scheduled. Navigate to 'calendar.txt' to see the appointment."); 
+                
                 run_scheduler(); 
+                is_added = true; 
             } else {
                 console.log("\nYour appointment has not been scheduled. "); 
                 run_scheduler(); 
+                is_added = false; 
             }
 
 
@@ -377,10 +382,10 @@ END:VEVENT`;
             await fs.promises.writeFile("calendar.txt", fileContent);
         }
 
-        return true; 
+        return is_added; 
     } catch (err) {
         console.error('Error reading or writing file:', err);
-        return false; 
+        return is_added; 
     }
 
 
@@ -476,7 +481,7 @@ function find_record(records, uidToFind) {
       const uidMatch = record.find(line => line.startsWith('UID:'));
       return uidMatch && uidMatch.split(':')[1] === uidToFind;
     });
-  }
+}
   
 
 async function cancel_appointment(uid){
@@ -607,3 +612,9 @@ async function run_scheduler(){
 run_scheduler(); 
 
   
+
+module.exports = {
+    add_appointment,
+    find_record,
+    cancel_appointment,
+};
