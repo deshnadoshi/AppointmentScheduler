@@ -67,16 +67,12 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
         dates_available = await find_N_dates(new Date(start_date), new Date(end_date)); 
 
         console.log(dates_available); // delete later
-        if (!dates_available.includes(book_this_date)){
-            return false; 
-
-        }
 
         if (dates_available.length == 0){
             console.log("ERROR: There are no available dates in the chosen date range."); 
             run_scheduler();  
 
-            return false; 
+            resolve(false); 
         } else {
             console.log("The available dates in the chosen date range are: "); 
             const selection_dates = {};
@@ -85,9 +81,15 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
                 const key = "date" + (i + 1); 
                 selection_dates[key] = dates_available[i];
             }
-            console.log(selection_dates);
+            console.log(selection_dates); 
 
             load_booked_dates(); 
+
+            console.log(selection_dates.includes(book_this_date)); // delete later
+            if (!selection_dates.includes(book_this_date)){
+                run_scheduler(); 
+                resolve(false); 
+            }
 
 
             let valid_selection = true; 
@@ -176,16 +178,17 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
             } catch (error){
                 console.log("Error booking the appointment."); 
             }
+
             
             if (successfully_added){
                 console.log("\nYour appointment has been scheduled. Navigate to 'calendar.txt' to see the appointment."); 
                 run_scheduler(); 
-                return true; 
+                resolve(true); 
 
             } else {
                 console.log("\nYour appointment has not been scheduled. "); 
                 run_scheduler(); 
-                return false; 
+                resolve(false); 
 
             }
 
@@ -627,11 +630,12 @@ async function run_scheduler(attendee_info, book_this_date, generated_dtstamp, m
 }
 
 run_scheduler(); 
-
+// add_appointment("test2@gmail.com", new Date(2024, 1, 12), new Date(2024, 2, 18), "REQUEST", "CONFIRMED", "ds87lsk");
   
 
 module.exports = {
     add_appointment,
     find_record,
     cancel_appointment,
+    process_input,
 };
