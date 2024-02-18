@@ -535,6 +535,7 @@ async function cancel_appointment(uid){
         if (lookup_record != undefined){
             console.log("The record below will be cancelled."); 
             let merged_record = lookup_record.join('\n') + "\n";
+            console.log("\n", merged_record); 
             
             let updated_record = merged_record.replace(/(STATUS:).*?(?=\n)/, '$1CANCELLED');
 
