@@ -60,17 +60,17 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
 
     } while (end_format_correct == false || end_valid == false); 
 
+    return new Promise(async (resolve, reject) => {
 
     if (end_valid && start_valid){
         // code here for the next four available dates.
-        let dates_available = false;
+        let dates_available = [];
         dates_available = await find_N_dates(new Date(start_date), new Date(end_date)); 
 
         console.log(dates_available); // delete later
 
         if (dates_available.length == 0){
             console.log("ERROR: There are no available dates in the chosen date range."); 
-            run_scheduler();  
 
             resolve(false); 
         } else {
@@ -85,9 +85,8 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
 
             load_booked_dates(); 
 
-            console.log(selection_dates.includes(book_this_date)); // delete later
-            if (!selection_dates.includes(book_this_date)){
-                run_scheduler(); 
+            // console.log(selection_dates.includes(book_this_date)); // delete later
+            if (!selection_dates.hasOwnProperty(book_this_date)){
                 resolve(false); 
             }
 
@@ -182,21 +181,28 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
             
             if (successfully_added){
                 console.log("\nYour appointment has been scheduled. Navigate to 'calendar.txt' to see the appointment."); 
-                run_scheduler(); 
                 resolve(true); 
 
             } else {
                 console.log("\nYour appointment has not been scheduled. "); 
-                run_scheduler(); 
                 resolve(false); 
-
             }
 
+            resolve(false); 
+            run_scheduler(); 
+
+
+           
 
         }
 
 
     }
+
+    resolve(false); 
+
+    });
+
 
 }
 
@@ -425,8 +431,8 @@ function split_record(record){
 }
 
 function find_appointment(uid){
-
-    fs.readFile("calendar.txt", 'utf8', (err, data) => {
+    return new Promise((resolve, reject) => {
+        fs.readFile("calendar.txt", 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading the file. Please re-run the program.');
             reject(err);
@@ -481,16 +487,19 @@ function find_appointment(uid){
         if (lookup_record != undefined){
             console.log("Below is the record you requested information about."); 
             console.log(lookup_record);
-            return true; 
+            run_scheduler(); 
+            resolve(true); 
         } else {
             console.log("No such record exists."); 
-            return false; 
+            run_scheduler(); 
+            resolve(false); 
         }
         
         
-        run_scheduler(); 
+        
 
     });
+});
 
 
 
@@ -502,9 +511,26 @@ function find_record(records, uidToFind) {
       return uidMatch && uidMatch.split(':')[1] === uidToFind;
     });
 }
+
+async function create_appointment_check(attendee, dtstart, dtstamp, method, stat, uid, start_date, end_date){
+
+    let dates_available = [];
+    dates_available = await find_N_dates(new Date(start_date), new Date(end_date)); 
+    const email_regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    const phone_regex = /^\d{3}-?\d{3}-?\d{4}$/;
+
+    if (dates_available.includes(dtstart) && method.toLowerCase() === "request" && (stat.toLowerCase() === "tentative" || stat.toLowerCase() === "confirmed") && (email_regex.test(attendee) || phone_regex.test(attendee)) && (end_date >= start_date)){
+        console.log("here"); 
+        return true; 
+    }
+
+
+    return false; 
+}
   
 
-async function cancel_appointment(uid){
+function cancel_appointment(uid){
+    return new Promise((resolve, reject) => {
 
     fs.readFile("calendar.txt", 'utf8', async (err, data) => {
         if (err) {
@@ -572,32 +598,37 @@ async function cancel_appointment(uid){
             if (index_to_replace != -1){
                 records[index_to_replace] = updated_record; 
                 file_content = "BEGIN:VCALENDAR\nPRODID:object1\nVERSION:1.0\n" + records.join("") + "END:VCALENDAR";
-                
+                resolve(true); 
+                return new Promise((resolve, reject) => {
+
                 fs.writeFile("calendar.txt", file_content, 'utf-8', (writeErr) => {
                     if (writeErr) {
                         console.error('Error writing to the file:', writeErr);
                         run_scheduler(); 
+                        return;
 
                     } else {
                         console.log('The appointment has been cancelled.');
                         run_scheduler(); 
-                        return true; 
+                        resolve(true);
 
                     }
                 });
+            });
         
             }
 
-            return true; 
+            resolve(true); 
 
         } else {
             console.log("No such record exists."); 
             run_scheduler(); 
-            return false; 
+            resolve(false); 
         }
         
     });
 
+});
 
 }
 
@@ -630,12 +661,12 @@ async function run_scheduler(attendee_info, book_this_date, generated_dtstamp, m
 }
 
 run_scheduler(); 
-// add_appointment("test2@gmail.com", new Date(2024, 1, 12), new Date(2024, 2, 18), "REQUEST", "CONFIRMED", "ds87lsk");
   
 
 module.exports = {
     add_appointment,
-    find_record,
+    find_appointment,
     cancel_appointment,
     process_input,
+    create_appointment_check,
 };
