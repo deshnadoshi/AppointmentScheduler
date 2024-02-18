@@ -9,6 +9,10 @@ const readline = require('node:readline').createInterface({
     output: process.stdout,
   });
 
+
+/**
+ * Minor function to handle command line input.
+ */
 function ask_question(question_string){   
     return new Promise((resolve) => {
         readline.question(question_string, (answer) => {
@@ -18,6 +22,9 @@ function ask_question(question_string){
     
 }
 
+/**
+ * Processes input for dealing with scheduling an appointment.
+ */
 async function process_input(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code){
 
     let start_format_correct = true; 
@@ -204,7 +211,9 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
 
 }
 
-
+/**
+ * Ensure that the date entered is of theh correct format.
+ */
 function check_date_format(str){
     const date_regex = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -215,7 +224,9 @@ function check_date_format(str){
     return false; 
 }
 
-
+/**
+ * Ensures that the date entered is valid.
+ */
 function is_valid_date(date_str) {
     let year = Number(date_str.split("-")[0]); 
     let month = Number(date_str.split("-")[1]) - 1; 
@@ -230,6 +241,9 @@ function is_valid_date(date_str) {
     );
 }
 
+/**
+ * Find the next N dates upto (4 dates) within a given range.
+ */
 async function find_N_dates(start_date, end_date){
     let available_dates = []; 
 
@@ -254,6 +268,9 @@ async function find_N_dates(start_date, end_date){
 
 }
 
+/**
+ * Checks if the date select is a bank holiday or not. 
+ */
 function is_bank_holiday(date_obj){
 
 
@@ -275,6 +292,9 @@ function is_bank_holiday(date_obj){
 
 }
 
+/**
+ * Checks if the date selected is a weekend. 
+ */
 function is_weekend(date_obj){
     const is_weekend = (date_obj.getDay() === 5 || date_obj.getDay() === 6); 
     if (is_weekend){
@@ -285,6 +305,9 @@ function is_weekend(date_obj){
 
 }
 
+/**
+ * Checks if the date selected is already a date where there is an appointment.
+ */
 async function load_booked_dates() {
     return new Promise((resolve, reject) => {
         let booked_times = [];
@@ -354,7 +377,9 @@ async function load_booked_dates() {
     });
 }
 
-
+/**
+ * Helper function for comparing two date objects. 
+ */
 function compare_date_objects(date_obj, date_arr){
 
     for (let i = 0; i < date_arr.length; i++){
@@ -368,7 +393,9 @@ function compare_date_objects(date_obj, date_arr){
 
 }
 
-
+/**
+ * Generates a randomized confirmation code. 
+ */
 function generated_confirmation_code() {
     const timestamp = new Date().getTime().toString();
     const hash = crypto.createHash('sha256').update(timestamp).digest('hex');
@@ -378,8 +405,9 @@ function generated_confirmation_code() {
   
 }
 
-
-
+/**
+ * Adds an appointment to the scheduler.
+ */
 async function add_appointment(attendee, dtstart, dtstamp, method, stat, uid){
 
 
@@ -416,6 +444,10 @@ END:VEVENT`;
 
 }
 
+
+/**
+ * Helper function to split the text file with the records.
+ */
 function split_record(record){
     let record_contents = []; 
 
@@ -428,6 +460,9 @@ function split_record(record){
     return record_contents; 
 }
 
+/**
+ * Find an appointment based on its uid. 
+ */
 function find_appointment(uid){
     return new Promise((resolve, reject) => {
         fs.readFile("calendar.txt", 'utf8', (err, data) => {
@@ -503,6 +538,9 @@ function find_appointment(uid){
 
 }
 
+/**
+ * Helper function to find the record with a certain uid in the file. 
+ */
 function find_record(records, uidToFind) {
     return records.find(record => {
       const uidMatch = record.find(line => line.startsWith('UID:'));
@@ -510,6 +548,9 @@ function find_record(records, uidToFind) {
     });
 }
 
+/**
+ * Checks if an appointment can be scheduled based on the parameters.
+ */
 async function create_appointment_check(attendee, dtstart, dtstamp, method, stat, uid, start_date, end_date){
 
     let dates_available = [];
@@ -526,7 +567,9 @@ async function create_appointment_check(attendee, dtstart, dtstamp, method, stat
     return false; 
 }
   
-
+/**
+ * Deals with cancelling an appointment based on uid. 
+ */
 function cancel_appointment(uid){
     return new Promise((resolve, reject) => {
 
@@ -627,7 +670,9 @@ function cancel_appointment(uid){
 }
 
 
-
+/**
+ * Handles running the command line prompts. 
+ */
 async function run_scheduler(attendee_info, book_this_date, generated_dtstamp, method_info, status_info, confirmation_code){
     const response =  await ask_question("\nPlease choose your next step: \n    1 - QUIT\n    2 - SCHEDULE APPOINTMENT\n    3 - LOOKUP APPOINTMENT\n    4 - CANCEL APPOINTMENT\n\n");
     if (parseInt(response) == 1){
