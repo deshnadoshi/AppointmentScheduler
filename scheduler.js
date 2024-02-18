@@ -67,11 +67,9 @@ async function process_input(attendee_info, book_this_date, generated_dtstamp, m
         let dates_available = [];
         dates_available = await find_N_dates(new Date(start_date), new Date(end_date)); 
 
-        console.log(dates_available); // delete later
-
         if (dates_available.length == 0){
             console.log("ERROR: There are no available dates in the chosen date range."); 
-
+            run_scheduler(); 
             resolve(false); 
         } else {
             console.log("The available dates in the chosen date range are: "); 
