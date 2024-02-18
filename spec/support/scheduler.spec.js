@@ -10,5 +10,12 @@ describe ('Appointment Scheduler', () => {
 
     }); 
 
+    // Test Case 2: Should not schedule an appointment that is scheduled on the same day as an exisitng appointment. 
+    it ('should not schedule an appointment that is scheduled on the same day as an exisitng appointment.', async () => {
+        const result = await add_appointment("test1@gmail.com", new Date(2024, 1, 12), new Date(2024, 2, 18), "REQUEST", "CONFIRMED", "ds87lsk"); 
+        expect(result).toBe(false); 
+
+    }); 
+
 })
 
