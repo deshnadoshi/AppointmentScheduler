@@ -1,5 +1,5 @@
 # ECE452: Software Engineering Assignment 4
-#### Deshna Doshi, dd1035, 206009273
+#### Deshna Doshi, dd1035
 ### Algorithm Design Description: 
 
 **_Jasmine Test Cases Note: Running 'npm test' more than once in a row will cause the Jasmine test case outputs to be added to calendar.txt twice (they will NOT overwrite each other), thus the output may look a little unexpected. However, the test cases will all pass no matter how many times they are run._**
